@@ -1,0 +1,11 @@
+body {
+    
+    background-color: #0c1427; /* Couleur de fond */
+    color: #fff; /* Couleur du texte pour contraste */
+  }
+    .chart-container {
+      margin-bottom: 20px; /* Réduire l'espacement entre les graphiques */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }

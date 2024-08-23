@@ -1,0 +1,10 @@
+# config/mongoid.yml
+development:
+  clients:
+    default:
+      database: PWN
+      hosts:
+        - localhost:27017
+      options:
+        server_selection_timeout: 5
+
