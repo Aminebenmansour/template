@@ -12,7 +12,15 @@
  *
  *= require_tree .
  *= require_self
- */
+ */ .chart-container {
+  margin-bottom: 20px; /* Réduire l'espacement entre les graphiques */
+  display: flex;
+  justify-content: center;
+  background-color:rgb(224, 21, 38); /* Couleur de fond pour les conteneurs de graphiques */
+  align-items: center;
+  border-radius: 15px; /* Arrondir les coins des conteneurs */
+  padding: 10px; /* Ajouter du padding si nécessaire */
+}
 
  th {
     width: 20%;

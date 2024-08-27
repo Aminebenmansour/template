@@ -8,64 +8,77 @@
   <script src="https://code.highcharts.com/highcharts-3d.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+  <script>
+       var colors = {
+          primary        : "#6571ff",
+          secondary      : "#7987a1",
+          success        : "#05a34a",
+          info           : "#66d1d1",
+          warning        : "#fbbc06",
+          danger         : "#ff3366",
+          light          : "#e9ecef",
+          dark           : "#060c17",
+          muted          : "#7987a1",
+          gridBorder     : "rgba(77, 138, 240, .15)",
+          bodyColor      : "#000",
+          cardBg         : "#fff"
+        }
+  </script>
   <style>
-    .chart-container {
-      margin-bottom: 20px; /* Réduire l'espacement entre les graphiques */
-      display: flex;
-      justify-content: center;
-      background-color: #152342; /* Couleur de fond pour les conteneurs de graphiques */
-      align-items: center;
-      border-radius: 15px; /* Arrondir les coins des conteneurs */
-      padding: 10px; /* Ajouter du padding si nécessaire */
-    }
-    
-    .chart-container.x {
-      width: 50%;
-      
-      margin: 0; /* Supprimer la marge pour aligner les graphiques côte à côte */
-    }
-    
-    .page-title {
-      text-align: center; /* Centrer le titre */
-      color: #0c1427; /* Couleur du texte du titre */
-      margin-top: 20px; /* Espacement au-dessus du titre */
-      margin-bottom: 40px; /* Espacement en dessous du titre */
-    }
-    
-    .charts-row {
-      display: flex;
-      
-      justify-content: space-between; /* Espacement entre les graphiques */
-      gap: 20px; /* Espacement entre les graphiques */
-    }
-    
-    #chart {
-      width: 50%; /* Ajuster la largeur pour s'adapter à l'espace disponible */
-    }
+
+   
   </style>
 </head>
 <body>
+
   <div class="container">
-    <h1 class="page-title">Dashboards</h1>
+    <div class="d-flex align-items-center justify-content-center">
+      <h1 class="page-title">Dashboards</h1>
+    </div>
   </div>
+    
+    <div class="row">
+        <div class="col-xl-12 stretch-card">
+          <div class="card-body">
+            <h6 class="card-title"> </h6>
+              <!-- Conteneur pour le graphique des forums -->
+              <div id="forums-container" class="chart-container"></div>
+          </div>
+        </div> 
+    </div> 
+    <div class="row">
+        <div class="col-xl-12 grid-margin stretch-card">
+          <div class="card-body">
+            <!-- Conteneur pour le graphique des titres et dates de publication -->
+            <div id="titles-dates-container" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
 
-  <!-- Conteneur pour le graphique des forums -->
-  <div id="forums-container" class="chart-container"></div>
+    <!-- Conteneur pour les graphiques côte à côte -->
+    <div class="row">
+        <div class="col-xl-6 grid-margin stretch-card">
+          <div class="card-body">
+            <h6 class="card-title"></h6>
+              <!-- Conteneur pour le graphique de la distribution des statuts -->
+              <div id="composition-container" class="chart-container x"></div>
+          </div>
+          
+        </div>
+      <div class="col-xl-6 grid-margin stretch-card">
+          <div class="card-body">
+              <!-- Conteneur pour le graphique de produits par mois -->
+              <div id="chart" class="chart-container x"></div>
+          </div>  
+      </div>
+    </div>
+  
 
-  <!-- Conteneur pour le graphique des titres et dates de publication -->
-  <div id="titles-dates-container" class="chart-container"></div>
-
-  <!-- Conteneur pour les graphiques côte à côte -->
-  <div class="charts-row">
-    <!-- Conteneur pour le graphique de la distribution des statuts -->
-    <div id="composition-container" class="chart-container x"></div>
-
-    <!-- Conteneur pour le graphique de produits par mois -->
-    <div id="chart" class="chart-container x"></div>
-  </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+   
+
       // Prépare les données des forums depuis Rails
       var forumsData = <%= raw @forums.to_json(only: [:title, :status, :visits, :pub]) %>;
       var statusData = <%= raw @status_data.to_json %>;
@@ -76,7 +89,7 @@
       });
 
       // Sélectionner les 10 forums les plus visités
-      var top10Forums = forumsData.slice(0, 8);
+      var top10Forums = forumsData.slice(0, 10);
 
       // Transformer les données des forums au format attendu par ApexCharts
       var forumsChartData = top10Forums.map(function(item) {
@@ -86,72 +99,113 @@
         };
       });
 
-      // Création du graphique ApexCharts pour les forums (nombre de visites)
-      var forumsOptions = {
-        series: [{
-          name: 'Number of Visits',
-          data: forumsChartData
-        }],
-        chart: {
-          type: 'bar',
-          height: 300 // Ajuster la hauteur
+    // Création du graphique ApexCharts pour les forums (nombre de visites)
+var forumsOptions = {
+  series: [{
+    name: 'Number of Visits',
+    data: forumsChartData
+  }],
+  colors: [colors.primary],
+  chart: {
+   type: 'bar',
+        height: '400',
+        parentHeightOffset: 0,
+        foreColor: colors.bodyColor,
+        background: colors.cardBg,
+        toolbar: {
+          show: false
         },
-        xaxis: {
-          type: 'category',
-          labels: {
-            formatter: function(val) {
-              return val; // Utiliser le titre du forum comme étiquette
-            },
-            style: {
-              colors: 'white'
-            }
-          }
-        },
-        yaxis: {
-          labels: {
-            formatter: function(val) {
-              return val; // Utiliser le titre du forum comme étiquette
-            },
-            style: {
-              colors: 'white'
-            }
-          }
-        },
-        title: {
-          text: 'Top 10 Most Visited Forums',
-          align: 'center', // Aligner le titre au centre
-          style: {
-            color: 'white', // Couleur du texte du titre
-            fontSize: '16px', // Taille de la police du titre (optionnel)
-            fontWeight: 'bold' // Poids de la police du titre (optionnel)
-          }
-        },
-        tooltip: {
-          x: {
-            formatter: function(val) {
-              return val; // Afficher le titre du forum
-            }
-          }
-        },
-        colors: ['white'] // Couleurs personnalisées pour les séries
-      };
 
-      var forumsChart = new ApexCharts(document.querySelector("#forums-container"), forumsOptions);
-      forumsChart.render();
+    toolbar: {
+      show: false // Cacher la barre d'outils du graphique colors.primary
+    },
+  },
+ plotOptions: {
+        bar: {
+          borderRadius: 4
+        }
+      },
+  dataLabels: {
+    enabled: true,
+    
+    formatter: function(val) {
+      return val; // Afficher les valeurs sur les barres
+    }
+  },
+  xaxis: {
+    type: 'category',
+    labels: {
+      formatter: function(val) {
+        return val; // Utiliser le titre du forum comme étiquette
+      },
+      style: {
+        fontSize: '12px' // Taille de la police des étiquettes
+      }
+    }
+  },
+  yaxis: {
+    labels: {
+      formatter: function(val) {
+        return val; // Afficher les valeurs sur l'axe Y
+      },
+      style: {
+        fontSize: '12px' // Taille de la police des étiquettes
+      }
+    }
+  },
+  title: {
+    text: 'Top 10 Most Visited Targets',
+    align: 'center',
+    style: {
+      color: '', // Couleur du texte du titre
+      fontSize: '18px', // Taille de la police du titre
+      fontWeight: 'bold' // Poids de la police du titre
+    }
+  },
+  tooltip: {
+    theme: 'dark', // Thème sombre pour les tooltips
+    x: {
+      formatter: function(val) {
+        return val; // Afficher le titre du forum
+      }
+    },
+    
+    y: {
+      formatter: function(val) {
+        return val + " visits"; // Afficher le nombre de visites
+      }
+    }
+  },
+  grid: {
+        padding: {
+          bottom: -4
+        },
+        borderColor: colors.gridBorder,
+        xaxis: {
+          lines: {
+            show: true
+          }
+        }
+      },
+};
+
+var forumsChart = new ApexCharts(document.querySelector("#forums-container"), forumsOptions);
+forumsChart.render();
 
       // Création du graphique ApexCharts pour la distribution des statuts
       var compositionOptions = {
         series: statusData.map(function(item) { return item.y; }), // Utiliser les valeurs des statuts
         chart: {
-          type: 'pie',
-          height: 400, // Ajuster la hauteur
-          width: 400 // Ajuster la largeur
+          height: 400,
+        type: "pie",
+        foreColor: colors.bodyColor,
+        background: colors.cardBg,
         },
-         title: {
-          text: 'published',
+        colors: [colors.primary, colors.danger], // Choisissez les couleurs que vous voulez
+        title: {
+          text: 'Attack Status Distribution',
           align: 'center', // Aligner le titre au centre
           style: {
-            color: 'white', // Couleur du texte du titre
             fontSize: '16px', // Taille de la police du titre (optionnel)
             fontWeight: 'bold' // Poids de la police du titre (optionnel)
           }
@@ -160,7 +214,7 @@
         legend: {
           position: 'bottom', // Position de la légende
           labels: {
-            colors: ['white'] // Couleur du texte de la légende
+            colors: ['black'] // Couleur du texte de la légende
           }
         }
       };
@@ -181,95 +235,107 @@
         return new Date(b.pub) - new Date(a.pub);
       });
 
-      // Sélectionner les 10 forums les plus récents
-      var top10RecentForums = titlesDatesRawData.slice(0, 8);
+      // Sélectionner les 8 forums les plus récents
+      var titlesDatesData = titlesDatesRawData.slice(0, 10);
 
-      // Transformer les données pour le graphique des titres et dates de publication
-      var titlesDatesData = top10RecentForums.map(function(item) {
-        return {
-          x: item.title,
-          y: new Date(item.pub).getTime() // Utilisation du timestamp pour le graphique
-        };
+      // Transformer les données pour Highcharts
+      var titles = titlesDatesData.map(function(item) {
+        return item.title;
       });
 
-      // Création du graphique ApexCharts pour les titres et dates de publication
-    var titlesDatesOptions = {
-    series: [{
-        name: 'Publication Date',
-        data: titlesDatesData
-    }],
-    chart: {
-        height: 300, // Ajuster la hauteur
-        type: 'line',
-        zoom: {
-            enabled: false
-        },
-    },
-    dataLabels: {
-        enabled: true,
-        formatter: function(val, opts) {
-            // Afficher la date formatée au-dessus de chaque point
-            return Highcharts.dateFormat('%Y-%m-%d', new Date(val));
-        },
-        style: {
-            color: 'white' // Couleur du texte des étiquettes de données
-        },
-        background: {
-            enabled: true,
-            foreColor: 'white',
-            borderRadius: 2,
-            borderWidth: 1,
-            borderColor: 'white'
-        }
-    },
-    stroke: {
-        curve: 'smooth',
-        colors: ['#ffffff'] // Couleur des lignes
-    },
-    title: {
-        text: 'Top 10 Most Recent Forums by Publication Date',
-        align: 'center', // Aligner le titre au centre
-        style: {
-            color: 'white', // Couleur du texte du titre
-            fontSize: '16px', // Taille de la police du titre
-            fontWeight: 'bold' // Poids de la police du titre
-        }
-    },
-    xaxis: {
-        type: 'category',
-        labels: {
-            formatter: function(value) {
-                return value; // Utiliser le titre du forum comme étiquette
-            },
-            style: {
-                colors: 'white'
-            }
-        },
-        categories: top10RecentForums.map(function(item) { return item.title; })
-    },
-    yaxis: {
-        labels: {
-            formatter: function(val) {
-                return Highcharts.dateFormat('%Y-%m-%d', new Date(val)); // Formater les dates sur l'axe des ordonnées
-            },
-            style: {
-                colors: 'white'
-            }
-        }
+      var pubDates = titlesDatesData.map(function(item) {
+        return new Date(item.pub);
+      });
+// Définition des options du graphique Highcharts pour les titres et dates de publication
+var options = {
+  chart: {
+    type: 'line',
+    height: 400,
+     backgroundColor: colors.cardBg,// Couleur de fond du graphique
+    style: {
+      fontFamily: 'Arial, sans-serif' // Police personnalisée
     }
+  },
+   colors: [colors.primary],
+  title: {
+    text: 'Last Published Websites',
+    style: {
+      color: '', // Couleur du texte du titre
+      fontSize: '18px', // Taille de la police du titre
+      fontWeight: 'bold' // Poids de la police du titre
+    }
+  },
+  xAxis: {
+    categories: titles,
+    labels: {
+      style: {
+        color: '', // Couleur des étiquettes
+        fontSize: '12px' // Taille de la police des étiquettes
+      }
+    }
+  },
+  yAxis: {
+    title: {
+      text: 'Publication Date',
+      style: {
+        color: '', // Couleur du texte du titre de l'axe Y
+        fontSize: '14px', // Taille de la police du titre de l'axe Y
+        fontWeight: 'bold' // Poids de la police du titre de l'axe Y
+      }
+    },
+    labels: {
+      style: {
+        color: '', // Couleur des étiquettes
+        fontSize: '12px' // Taille de la police des étiquettes
+      }
+    },
+    type: 'datetime',
+    dateTimeLabelFormats: {
+      day: '%e %b %Y' // Format de date
+    }
+  },
+  series: [{
+    name: 'Publication Date',
+    data: pubDates.map(function(date, index) {
+      return [titles[index], date.getTime()];
+    }),
+    color: '',
+    marker: {
+      radius: 4,
+      symbol: 'circle',
+      fillColor: '',
+      lineWidth: 2,
+      lineColor: ''
+    }
+  }],
+  tooltip: {
+    formatter: function() {
+      return 'Title: ' + this.x + '<br/>Publication Date: ' + Highcharts.dateFormat('%e %b %Y', this.y);
+    },
+    backgroundColor: '#2a2a3a',
+    borderColor: '#ff7c6b',
+    style: {
+      color: '#ffffff'
+    }
+  }
 };
 
+// Création et rendu du graphique
+var chart = Highcharts.chart('titles-dates-container', options);
+chart.render();
 
-      var titlesDatesChart = new ApexCharts(document.querySelector("#titles-dates-container"), titlesDatesOptions);
-      titlesDatesChart.render();
+
+
       var options = {
     series: [{
-      name: 'Desktops',
+      name: 'Targets',
       data: <%= raw @monthly_data[:values].to_json %>
     }],
+     colors: [colors.primary],
     chart: {
-      height: 350,
+      height: 400,
       type: 'line',
+       background: colors.cardBg,// Couleur de fond du graphique
       zoom: {
         enabled: false
       }
@@ -281,10 +347,9 @@
       curve: 'smooth'
     },
     title: {
-      text: 'Product Trends by Month',
+      text: 'Targets per Month', // Titre mis à jour
       align: 'center',
       style:{
-        color: 'white',
         fontSize: '16px',
         fontWeight: 'bold'
       }
@@ -298,20 +363,25 @@
     xaxis: {
       categories: <%= raw @monthly_data[:months].to_json %>,
       labels: {
-        style: {
-          colors: 'white'
-        }
+       
       }
     }, // <- Ajout d'une virgule ici
     yaxis: {
+      title: {
+      text: 'Number of Publications',
+      style: {
+        color: '', // Couleur du texte du titre de l'axe Y
+        fontSize: '14px', // Taille de la police du titre de l'axe Y
+        fontWeight: 'bold' // Poids de la police du titre de l'axe Y
+      }
+    },
       labels: {
         style: {
-          colors: 'white'
+          colors: ''
         }
       }
     }
   };
-
 
   var chart = new ApexCharts(document.querySelector("#chart"), options);
   chart.render();
