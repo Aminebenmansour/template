@@ -46,6 +46,15 @@
           </div>
         </div> 
     </div> 
+     <div class="row">
+        <div class="col-xl-12 stretch-card">
+          <div class="card-body">
+            <h6 class="card-title"> </h6>
+              <!-- Conteneur pour le graphique des forums -->
+              <div id="size-container" class="size-container"></div>
+          </div>
+        </div> 
+    </div> 
     <div class="row">
         <div class="col-xl-12 grid-margin stretch-card">
           <div class="card-body">
@@ -72,6 +81,15 @@
           </div>  
       </div>
     </div>
+    <div class="row">
+      <div class="col-xl-12 grid-margin stretch-card">
+        <div class="card-body">
+            <!-- Conteneur pour le graphique de la carte -->
+            <div id="map-container" class="chart-container"></div>
+        </div>
+      </div>
+    </div>
+
   
 
 
@@ -82,6 +100,10 @@
       // Prépare les données des forums depuis Rails
       var forumsData = <%= raw @forums.to_json(only: [:title, :status, :visits, :pub]) %>;
       var statusData = <%= raw @status_data.to_json %>;
+      var sizedata = <%= raw @forums_by_data_size.to_json%>.slice(0, 10);
+      const mapData = <%= raw @map_data.to_json %>;
+      console.log('rrr')
+      console.log(mapData)
 
       // Trier les forums par nombre de visites en ordre décroissant
       forumsData.sort(function(a, b) {
@@ -96,6 +118,15 @@
         return {
           x: item.title,
           y: item.visits // Utilisation du nombre de visites pour le graphique
+        };
+      });
+      
+  var sizeChartData = sizedata.map(function(item) {
+        return {
+          x: item.title,
+          y: item.data_size, // Utilisation du nombre de visites pour le graphique
+          visits: item.visits   // Include the visits as an additional value
+
         };
       });
 
@@ -144,6 +175,14 @@ var forumsOptions = {
     }
   },
   yaxis: {
+     title: {
+      text: 'Visiters',
+      style: {
+        fontSize: '14px', // Taille de la police du titre de l'axe Y
+        fontWeight: 'bold' // Poids de la police du titre de l'axe Y
+      }
+    },
+   
     labels: {
       formatter: function(val) {
         return val; // Afficher les valeurs sur l'axe Y
@@ -191,6 +230,111 @@ var forumsOptions = {
 
 var forumsChart = new ApexCharts(document.querySelector("#forums-container"), forumsOptions);
 forumsChart.render();
+  // Création du graphique ApexCharts pour les forums (nombre de visites)
+var sizeOptions = {
+  series: [{
+        name: 'Size',
+        data: sizeChartData.map(function(item) {
+            return {
+                x: item.x,   // Title
+                y: item.y,   // Data Size
+                z: item.visits  // Visits
+            };
+        })
+    }],
+  colors: [colors.primary],
+  chart: {
+   type: 'bar',
+        height: '400',
+        parentHeightOffset: 0,
+        foreColor: colors.bodyColor,
+        background: colors.cardBg,
+        toolbar: {
+          show: false
+        },
+
+    toolbar: {
+      show: false // Cacher la barre d'outils du graphique colors.primary
+    },
+  },
+ plotOptions: {
+        bar: {
+          borderRadius: 4
+        }
+      },
+  dataLabels: {
+    enabled: true,
+    
+    formatter: function(val) {
+      return val; // Afficher les valeurs sur les barres
+    }
+  },
+  xaxis: {
+    type: 'category',
+    labels: {
+      formatter: function(val) {
+        return val; // Utiliser le titre du forum comme étiquette
+      },
+      style: {
+        fontSize: '12px' // Taille de la police des étiquettes
+      }
+    }
+  },
+  yaxis: {
+     title: {
+      text: 'Sizes',
+      style: {
+        fontSize: '14px', // Taille de la police du titre de l'axe Y
+        fontWeight: 'bold' // Poids de la police du titre de l'axe Y
+      }
+    },
+    labels: {
+      formatter: function(val) {
+        return val; // Afficher les valeurs sur l'axe Y
+      },
+      style: {
+        fontSize: '12px' // Taille de la police des étiquettes
+      }
+    }
+  },
+  title: {
+    text: 'Top 10 si',
+    align: 'center',
+    style: {
+      color: '', // Couleur du texte du titre
+      fontSize: '18px', // Taille de la police du titre
+      fontWeight: 'bold' // Poids de la police du titre
+    }
+  },
+  tooltip: {
+    theme: 'dark', // Thème sombre pour les tooltips
+    x: {
+      formatter: function(val) {
+        return val; // Afficher le titre du forum
+      }
+    },
+    
+    y: {
+      formatter: function(val) {
+        return val + " visits"; // Afficher le nombre de visites
+      }
+    }
+  },
+  grid: {
+        padding: {
+          bottom: -4
+        },
+        borderColor: colors.gridBorder,
+        xaxis: {
+          lines: {
+            show: true
+          }
+        }
+      },
+};
+
+var sizeChart = new ApexCharts(document.querySelector("#size-container"), sizeOptions);
+sizeChart.render();
 
       // Création du graphique ApexCharts pour la distribution des statuts
       var compositionOptions = {
@@ -385,7 +529,89 @@ chart.render();
 
   var chart = new ApexCharts(document.querySelector("#chart"), options);
   chart.render();
+  (async () => {
+
+    const topology = await fetch(
+        'https://code.highcharts.com/mapdata/custom/world.topo.json'
+    ).then(response => response.json());
+
+    <%
+=begin%>
+ const data = await fetch(
+        'https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/world-population-density.json'
+    ).then(response => response.json());
+
+    // Prevent logarithmic errors in color calulcation
+    data.forEach(function (p) {
+        p.value = (p.value < 1 ? 1 : p.value);
+    }); 
+<%
+=end%>
+
+    // Initialize the chart
+    Highcharts.mapChart('map-container', {
+
+        chart: {
+            map: topology
+        },
+
+        title: {
+            text: 'Fixed tooltip with HTML'
+        },
+
+        legend: {
+            title: {
+                text: 'Visiters',
+                style: {
+                    color: ( // theme
+                        Highcharts.defaultOptions &&
+                            Highcharts.defaultOptions.legend &&
+                            Highcharts.defaultOptions.legend.title &&
+                            Highcharts.defaultOptions.legend.title.style &&
+                            Highcharts.defaultOptions.legend.title.style.color
+                    ) || 'black'
+                }
+            }
+        },
+
+        mapNavigation: {
+            enabled: true,
+            buttonOptions: {
+                verticalAlign: 'bottom'
+            }
+        },
+
+        tooltip: {
+            backgroundColor: 'none',
+            borderWidth: 0,
+            shadow: false,
+            useHTML: true,
+            padding: 0,
+            pointFormat: '<span class="f32"><span class="flag ' +
+                '{point.properties.hc-key}">' +
+                    '</span></span> {point.name}<br>' +
+                    '<span style="font-size:30px">{point.value} Visiters</span>',
+            positioner: function () {
+                return { x: 0, y: 250 };
+            }
+        },
+
+        colorAxis: {
+            min: 1,
+            max: 1000,
+            type: 'logarithmic'
+        },
+
+        series: [{
+            data: mapData,
+            joinBy: ['iso-a3', 'code3'],
+            name: 'Population density'
+        }]
     });
+
+})();
+    });
+   
   </script>
 </body>
 </html>

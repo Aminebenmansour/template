@@ -11,5 +11,8 @@ class Forum
     field :last_view, type: Time
     field :pub, type: Time
     field :full_url, type: String
+    field :country, type: String # Ajoutez ce champ
+    field :code3, type: String
+
   end
   
